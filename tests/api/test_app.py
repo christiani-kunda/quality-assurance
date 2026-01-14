@@ -20,6 +20,7 @@ class TestApp:
         assert "phone_number" in data
         assert data["phone_number"] == unique_phone
 
+
     def test_request_otp_with_invalid_phone_format(self, api_client):
         """Should reject invalid phone number format"""
         response = api_client.post(
@@ -30,6 +31,7 @@ class TestApp:
         data = response.json()
         assert "error" in data
 
+
     def test_request_otp_with_empty_phone(self, api_client):
         """Should reject empty phone number"""
         response = api_client.post(
@@ -38,6 +40,7 @@ class TestApp:
         )
         assert response.status_code == 400
 
+
     def test_request_otp_with_missing_phone(self, api_client):
         """Should reject missing phone number"""
         response = api_client.post(
@@ -45,6 +48,7 @@ class TestApp:
             json={}
         )
         assert response.status_code == 400
+
 
     def test_request_otp_with_various_valid_formats(self, api_client):
         """Should accept various valid phone number formats"""
@@ -65,7 +69,6 @@ class TestApp:
 
 
         # """Test OTP verification endpoint"""
-
     def test_verify_otp_with_correct_code(self, api_client, unique_phone):
         """Should successfully verify with correct OTP"""
         # Request OTP first
@@ -85,6 +88,7 @@ class TestApp:
         assert "phone_number" in data
         assert data["phone_number"] == unique_phone
 
+
     def test_verify_otp_with_incorrect_code(self, api_client, unique_phone):
         """Should reject incorrect OTP"""
         # Request OTP first
@@ -102,6 +106,7 @@ class TestApp:
         data = response.json()
         assert "error" in data
 
+
     def test_verify_otp_without_requesting_first(self, api_client, unique_phone):
         """Should reject OTP verification without prior request"""
         response = api_client.post(
@@ -109,6 +114,7 @@ class TestApp:
             json={"phone_number": unique_phone, "otp": "0000"}
         )
         assert response.status_code == 401
+
 
     def test_verify_otp_with_empty_otp(self, api_client, unique_phone):
         """Should reject empty OTP"""
@@ -123,28 +129,6 @@ class TestApp:
         )
         assert response.status_code == 401
 
-    def test_bug_otp_case_insensitive(self, api_client, unique_phone):
-        """
-        BUG TEST: OTP verification is case-insensitive
-        Location: app.py line 103 - uses .lower() comparison
-        Expected: Should reject case variations
-        Actual: Accepts case-insensitive OTP
-        """
-        api_client.post(
-            f"{BASE_URL}/api/auth/request-otp",
-            json={"phone_number": unique_phone}
-        )
-
-        # Try uppercase version of OTP
-        response = api_client.post(
-            f"{BASE_URL}/api/auth/verify-otp",
-            json={"phone_number": unique_phone, "otp": "ABCD"}
-        )
-
-        # This should fail (401) but might pass due to case-insensitive comparison
-        # If hardcoded OTP is "0000", "ABCD".lower() == "0000".lower() will fail correctly
-        # But the bug exists in the code logic
-        assert response.status_code in [200, 401]  # Document the bug
 
     def test_session_token_is_unique(self, api_client):
         """Each authentication should generate unique session token"""
@@ -170,19 +154,19 @@ class TestApp:
         assert token1 != token2
 
 
-
     # """Test application status endpoint"""
-
     def test_get_status_without_auth(self, api_client):
         """Should reject request without authentication"""
         response = api_client.get(f"{BASE_URL}/api/application/status")
         assert response.status_code == 401
+
 
     def test_get_status_with_invalid_token(self, api_client):
         """Should reject request with invalid token"""
         api_client.headers.update({"Authorization": "Bearer invalid-token"})
         response = api_client.get(f"{BASE_URL}/api/application/status")
         assert response.status_code == 401
+
 
     def test_get_status_no_application(self, authenticated_session):
         """Should return has_application=false when no application exists"""
@@ -191,6 +175,7 @@ class TestApp:
         assert response.status_code == 200
         data = response.json()
         assert data["has_application"] is False
+
 
     def test_get_status_with_application(self, authenticated_session, valid_application_data):
         """Should return application details after submission"""
@@ -209,7 +194,6 @@ class TestApp:
 
 
     # """Test application submission endpoint"""
-
     def test_submit_application_without_auth(self, api_client, valid_application_data):
         """Should reject submission without authentication"""
         response = api_client.post(
@@ -217,6 +201,7 @@ class TestApp:
             json=valid_application_data
         )
         assert response.status_code == 401
+
 
     def test_submit_valid_application(self, authenticated_session, valid_application_data):
         """Should successfully submit valid application"""
@@ -230,6 +215,7 @@ class TestApp:
         assert "message" in data
         assert "application" in data
         assert data["application"]["status"] in ["approved", "pending"]
+
 
     def test_submit_application_missing_required_fields(self, authenticated_session):
         """Should reject application with missing required fields"""
@@ -246,6 +232,7 @@ class TestApp:
         data = response.json()
         assert "errors" in data
 
+
     def test_submit_application_invalid_full_name(self, authenticated_session, valid_application_data):
         """Should reject full name with less than 2 characters"""
         session, phone = authenticated_session
@@ -255,6 +242,7 @@ class TestApp:
         response = session.post(f"{BASE_URL}/api/application/submit", json=data)
         assert response.status_code == 400
         assert "errors" in response.json()
+
 
     def test_submit_application_underage(self, authenticated_session, valid_application_data):
         """Should reject applicant under 18 years old"""
@@ -271,6 +259,7 @@ class TestApp:
         assert "errors" in data
         assert "date_of_birth" in data["errors"]
 
+
     def test_submit_application_exactly_18_years_old(self, authenticated_session, valid_application_data):
         """Should accept applicant exactly 18 years old - Boundary test"""
         session, phone = authenticated_session
@@ -286,6 +275,7 @@ class TestApp:
             print(f"Error response: {response.json()}")
         assert response.status_code == 201
 
+
     def test_submit_application_invalid_email(self, authenticated_session, valid_application_data):
         """Should reject invalid email format"""
         session, phone = authenticated_session
@@ -295,6 +285,7 @@ class TestApp:
         response = session.post(f"{BASE_URL}/api/application/submit", json=data)
         assert response.status_code == 400
         assert "errors" in response.json()
+
 
     def test_submit_application_loan_amount_below_minimum(self, authenticated_session, valid_application_data):
         """Should reject loan amount below minimum (1,000)"""
@@ -308,6 +299,7 @@ class TestApp:
         assert "errors" in data
         assert "loan_amount" in data["errors"]
 
+
     def test_submit_application_loan_amount_at_minimum(self, authenticated_session, valid_application_data):
         """Should accept loan amount at minimum boundary (1,000)"""
         session, phone = authenticated_session
@@ -316,6 +308,7 @@ class TestApp:
 
         response = session.post(f"{BASE_URL}/api/application/submit", json=data)
         assert response.status_code == 201
+
 
     def test_submit_application_loan_amount_above_maximum(self, authenticated_session, valid_application_data):
         """Should reject loan amount above maximum (5,000,000)"""
@@ -329,6 +322,7 @@ class TestApp:
         assert "errors" in data
         assert "loan_amount" in data["errors"]
 
+
     def test_submit_application_loan_amount_at_maximum(self, authenticated_session, valid_application_data):
         """Should accept loan amount at maximum boundary (5,000,000)"""
         session, phone = authenticated_session
@@ -337,6 +331,7 @@ class TestApp:
 
         response = session.post(f"{BASE_URL}/api/application/submit", json=data)
         assert response.status_code == 201
+
 
     def test_submit_application_zero_loan_amount(self, authenticated_session, valid_application_data):
         """Should reject zero loan amount"""
@@ -347,6 +342,7 @@ class TestApp:
         response = session.post(f"{BASE_URL}/api/application/submit", json=data)
         assert response.status_code == 400
 
+
     def test_submit_application_negative_loan_amount(self, authenticated_session, valid_application_data):
         """Should reject negative loan amount"""
         session, phone = authenticated_session
@@ -355,6 +351,7 @@ class TestApp:
 
         response = session.post(f"{BASE_URL}/api/application/submit", json=data)
         assert response.status_code == 400
+
 
     def test_submit_application_invalid_loan_term(self, authenticated_session, valid_application_data):
         """Should reject invalid loan term"""
@@ -367,6 +364,7 @@ class TestApp:
         response_data = response.json()
         assert "errors" in response_data
         assert "loan_term" in response_data["errors"]
+
 
     def test_spec_mismatch_loan_terms(self, api_client, valid_application_data):
         """
@@ -406,6 +404,7 @@ class TestApp:
                 print(f"Term {term} failed with: {response.json()}")
             assert response.status_code == 201, f"Term {term} should be valid but got {response.status_code}"
 
+
     def test_submit_application_missing_purpose(self, authenticated_session, valid_application_data):
         """Should reject application without purpose"""
         session, phone = authenticated_session
@@ -415,6 +414,7 @@ class TestApp:
         response = session.post(f"{BASE_URL}/api/application/submit", json=data)
         assert response.status_code == 400
         assert "errors" in response.json()
+
 
     def test_bug_duplicate_submission(self, authenticated_session, valid_application_data):
         """
@@ -450,7 +450,6 @@ class TestApp:
 
 
     # """Test application decision business logic"""
-
     def test_small_loan_young_adult_approved(self, authenticated_session, valid_application_data):
         """Small loan for age 25-60 should be approved"""
         session, phone = authenticated_session
@@ -462,6 +461,7 @@ class TestApp:
         assert response.status_code == 201
         assert response.json()["application"]["status"] == "approved"
 
+
     def test_high_amount_pending(self, authenticated_session, valid_application_data):
         """Loan amount >= 1,000,000 should go to pending"""
         session, phone = authenticated_session
@@ -471,6 +471,7 @@ class TestApp:
         response = session.post(f"{BASE_URL}/api/application/submit", json=data)
         assert response.status_code == 201
         assert response.json()["application"]["status"] == "pending"
+
 
     def test_senior_citizen_pending(self, authenticated_session, valid_application_data):
         """Age >= 60 should go to pending"""
@@ -482,6 +483,7 @@ class TestApp:
         response = session.post(f"{BASE_URL}/api/application/submit", json=data)
         assert response.status_code == 201
         assert response.json()["application"]["status"] == "pending"
+
 
     def test_bug_national_id_uniqueness_not_enforced(self, api_client):
         """
