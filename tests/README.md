@@ -114,10 +114,10 @@ npx playwright show-report
 
 ### API Tests (60% of test effort)
 
-| Component | Tests         | Coverage  |
-|-----------|---------------|-----------|
-| Application | 40+ tests     | 90+%      |
-| **Total** | **40+ tests** | **~90+%** |
+| Component | Tests        | Coverage  |
+|-----------|--------------|-----------|
+| Application | 36 tests     | 90+%      |
+| **Total** | **36 tests** | **~90+%** |
 
 **Key Test Areas**:
 - ✅ OTP request and verification
@@ -372,7 +372,7 @@ npx playwright show-trace trace.zip
 
 ### API Tests
 - **Execution Time**: ~2 seconds
-- **Tests**: 40+ tests
+- **Tests**: 36 tests
 - **Parallel**: No (sequential to avoid data conflicts)
 
 ### UI Tests
