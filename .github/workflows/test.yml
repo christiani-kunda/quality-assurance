@@ -74,6 +74,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      -   name: Start application services
+          run: |
+            docker-compose up -d
+            echo "Waiting for services to be ready..."
+            sleep 15
+
+      -   name: Verify services are running
+          run: |
+            curl -f http://localhost:5001/api/health || exit 1
+            curl -f http://localhost:5173 || exit 1
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -90,17 +101,6 @@ jobs:
         run: |
           cd tests/ui
           npx playwright install --with-deps chromium
-
-      - name: Start application services
-        run: |
-          docker-compose up -d
-          echo "Waiting for services to be ready..."
-          sleep 15
-
-      - name: Verify services are running
-        run: |
-          curl -f http://localhost:5001/api/health || exit 1
-          curl -f http://localhost:5173 || exit 1
 
       - name: Run Playwright tests
         run: |
