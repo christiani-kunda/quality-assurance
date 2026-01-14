@@ -142,6 +142,8 @@ class TestApp:
             json={"phone_number": phone1, "otp": "0000"}
         )
         token1 = response1.json().get("session_token")
+        assert token1 is not None
+        assert token1 != ""
 
         # Authenticate second user
         api_client.post(f"{BASE_URL}/api/auth/request-otp", json={"phone_number": phone2})
@@ -150,7 +152,8 @@ class TestApp:
             json={"phone_number": phone2, "otp": "0000"}
         )
         token2 = response2.json().get("session_token")
-
+        assert token2 is not None
+        assert token2 != ""
         assert token1 != token2
 
 
